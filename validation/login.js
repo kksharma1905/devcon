@@ -7,7 +7,7 @@ module.exports = function validateLoginInput(data){
   //TODO by using LOADASH library
 
   data.email = !isEmpty(data.email)? data.email: '';
-  data.password = !isEmpty(data.password)? data.password: '';
+  data.password = !isEmpty(data.password)? data.password: ''; 
   
   if(Validator.isEmpty(data.email)){
     errors.email = 'Email field is required';
@@ -16,7 +16,7 @@ module.exports = function validateLoginInput(data){
     errors.email = 'Email is Invalid';
   }
   if(Validator.isEmpty(data.password)){
-    errors.password = 'Password field is required';
+    errors.password = 'Password field is required'; 
   }
 
   return {
