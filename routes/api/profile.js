@@ -4,6 +4,9 @@ const mongoose = require('mongoose');
 const passport = require('passport');
 const keys = require('../../config/keys');
 
+//Load validaton
+const validateProfileInput = require('../../validation/profile'); 
+
 //Load Profile MOdel
 const Profile = require('../../models/Profile');
 //Load User Model
@@ -20,6 +23,7 @@ router.get('/test', (req, res) => res.json({msg: "Profile Works"}));
 router.get('/', passport.authenticate('jwt', {session: false}), (req, res) => {
   const errors = {};
   Profile.findOne({ user: req.user.id})
+    .populate('user', ['name', 'avatar'])
     .then(profile => {
       if(!profile){
         errors.noprofile = 'There is no profile for this user';
@@ -33,8 +37,18 @@ router.get('/', passport.authenticate('jwt', {session: false}), (req, res) => {
 // @route   POST api/profile
 // @desc    Create or Edit user profile
 // @access  Private
-router.post('/', passport.authenticate('jwt', {session: false}), 
+router.post(
+  '/',
+  passport.authenticate('jwt', {session: false}), 
   (req, res) => {
+    const { errors, isValid } = validateProfileInput(req.body);
+
+    //Check Validation
+    if(!isValid){
+      //Return any errors with 400 satus
+      return res.status(400).json(errors);
+    }
+
     //Get fields
     const profileFields = {};
     profileFields.user = req.user.id;
@@ -47,16 +61,16 @@ router.post('/', passport.authenticate('jwt', {session: false}),
     if(req.body.githubusername) profileFields.githubusername = req.body.githubusername;
     //Skills - Split into array
     if(typeof req.body.skills !== 'undefined'){
-      profileFields.skills = req.body.skills.split(',');
+      profileFields.skills = req.body.skills.split(','); 
     } 
 
     //Social
     profileFields.social = {};
-    if(req.body.youtube) profileFields.social.youtube = req.body.social.youtube;
-    if(req.body.twitter) profileFields.social.twitter = req.body.social.twitter;
-    if(req.body.facebook) profileFields.social.facebook = req.body.social.facebook;
-    if(req.body.linkedin) profileFields.social.linkedin = req.body.social.linkedin;
-    if(req.body.instagram) profileFields.social.instagram = req.body.social.instagram;
+    if(req.body.youtube) profileFields.social.youtube = req.body.youtube;
+    if(req.body.twitter) profileFields.social.twitter = req.body.twitter;
+    if(req.body.facebook) profileFields.social.facebook = req.body.facebook;
+    if(req.body.linkedin) profileFields.social.linkedin = req.body.linkedin;
+    if(req.body.instagram) profileFields.social.instagram = req.body.instagram;
 
     Profile.findOne({user: req.user.id})
       .then(profile => {
